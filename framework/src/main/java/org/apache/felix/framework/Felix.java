@@ -195,6 +195,9 @@ public class Felix extends BundleImpl implements Framework
     private final String[] m_bootPkgs;
     private final boolean[] m_bootPkgWildcards;
 
+    // Terminate class loading after searching boot delegation.
+    private final boolean m_skipGeneratedMethodSearch;
+
     // Shutdown gate.
     private volatile ThreadGate m_shutdownGate = null;
 
@@ -285,6 +288,11 @@ public class Felix extends BundleImpl implements Framework
      *       recommended not to use this property since it breaks modularity.
      *       The default value is empty.
      *   </li>
+     *   <li><tt>felix.skip.sun.reflect.generated.method.search</tt> -
+     *   Specifies if the class loading should be terminated at boot delegation for
+     *   for sun.reflect.GeneratedMethodAccessor* classes.
+     *   The default value is false.
+     *   </li>
      *   <li><tt>felix.systembundle.activators</tt> - A <tt>List</tt> of
      *       <tt>BundleActivator</tt> instances that are started/stopped when
      *       the System Bundle is started/stopped. The specified instances will
@@ -345,6 +353,8 @@ public class Felix extends BundleImpl implements Framework
         super();
         // Copy the configuration properties; convert keys to strings.
         m_configMutableMap = new StringMap();
+
+
         if (configMap != null)
         {
             for (Iterator i = configMap.entrySet().iterator(); i.hasNext(); )
@@ -402,7 +412,13 @@ public class Felix extends BundleImpl implements Framework
             m_bootPkgs[i] = s;
         }
 
-        //Initialize Native Library Aliases
+        String str = (m_configMap == null)
+                ? "false"
+                : (String) m_configMap.get(Constants.FELIX_SKIP_GENERATED_METHOD_SEARCH);
+
+        m_skipGeneratedMethodSearch = Boolean.valueOf(str);
+
+         //Initialize Native Library Aliases
         NativeLibraryClause.initializeNativeAliases(m_configMap);
 
         // Read the security default policy property
@@ -479,6 +495,10 @@ public class Felix extends BundleImpl implements Framework
     boolean[] getBootPackageWildcards()
     {
         return m_bootPkgWildcards;
+    }
+
+    public boolean skipGeneratedMethodSearch() {
+        return m_skipGeneratedMethodSearch;
     }
 
     private Map createUnmodifiableMap(Map mutableMap)
@@ -617,7 +637,6 @@ public class Felix extends BundleImpl implements Framework
     {
         return true;
     }
-
 
     @Override
     public void init() throws BundleException

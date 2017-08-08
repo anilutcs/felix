@@ -83,6 +83,8 @@ public class BundleWiringImpl implements BundleWiring
     public final static int EAGER_ACTIVATION = 0;
     public final static int LAZY_ACTIVATION = 1;
 
+    public final static String SUN_REFLECT_GENERATED_METHOD_ACCESSOR = "sun.reflect.GeneratedMethodAccessor";
+
     private final Logger m_logger;
     private final Map m_configMap;
     private final StatefulResolver m_resolver;
@@ -1492,6 +1494,12 @@ public class BundleWiringImpl implements BundleWiring
                                 {
                                     throw ex;
                                 }
+                            }
+                            
+                            //terminate search for sun.reflect.GeneratedMethodAccessor* classes if the property is set
+                            if (getBundle().getFramework().skipGeneratedMethodSearch()
+                                    && name.startsWith(SUN_REFLECT_GENERATED_METHOD_ACCESSOR)) {
+                                throw new ClassNotFoundException(name + " not found by " + this.getBundle());
                             }
                         }
 
