@@ -375,7 +375,7 @@ public class BundleWiringImplTest
         BundleImpl bundleImpl = mock(BundleImpl.class);
         Felix felix = mock(Felix.class);
         when(bundleImpl.getFramework()).thenReturn(felix);
-        when(felix.skipGeneratedMethodSearch()).thenReturn(true);
+        when(felix.skipGeneratedMethodClassloading()).thenReturn(true);
         when(bundleWiring.getBundle()).thenReturn(bundleImpl);
         BundleClassLoader bundleClassLoader = createBundleClassLoader(
                 BundleClassLoader.class, bundleWiring);

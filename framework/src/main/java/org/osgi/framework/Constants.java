@@ -976,14 +976,14 @@ public interface Constants {
 	String	FRAMEWORK_BOOTDELEGATION				= "org.osgi.framework.bootdelegation";
 
 	/**
-	 * Framework launching property specifies if sun.reflect.GeneratedMethod* class loading should be stopped after boot delegation.
+	 * Framework launching property specifies if sun.reflect.GeneratedMethod* class loading should be stopped before boot delegation.
 	 *
 	 * <p>
 	 * The value of this property may be retrieved by calling the
 	 * {@code BundleContext.getProperty} method.
 	 *
 	 */
-	String	FELIX_SKIP_GENERATED_METHOD_SEARCH = "felix.skip.sun.reflect.generated.method.search";
+	String	FELIX_SKIP_GENERATED_METHOD_CLASSLOADING = "felix.skip.generated.method.classloading";
 
 	/**
 	 * Framework launching property identifying packages which the system bundle

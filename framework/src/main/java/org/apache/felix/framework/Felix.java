@@ -196,7 +196,7 @@ public class Felix extends BundleImpl implements Framework
     private final boolean[] m_bootPkgWildcards;
 
     // Terminate class loading after searching boot delegation.
-    private final boolean m_skipGeneratedMethodSearch;
+    private final boolean m_skipGeneratedMethodClassloading;
 
     // Shutdown gate.
     private volatile ThreadGate m_shutdownGate = null;
@@ -288,8 +288,8 @@ public class Felix extends BundleImpl implements Framework
      *       recommended not to use this property since it breaks modularity.
      *       The default value is empty.
      *   </li>
-     *   <li><tt>felix.skip.sun.reflect.generated.method.search</tt> -
-     *   Specifies if the class loading should be terminated at boot delegation for
+     *   <li><tt>felix.skip.generated.method.classloading</tt> -
+     *   Specifies if the class loading should be terminated before boot delegation for
      *   for sun.reflect.GeneratedMethodAccessor* classes.
      *   The default value is false.
      *   </li>
@@ -414,9 +414,9 @@ public class Felix extends BundleImpl implements Framework
 
         String str = (m_configMap == null)
                 ? "false"
-                : (String) m_configMap.get(Constants.FELIX_SKIP_GENERATED_METHOD_SEARCH);
+                : (String) m_configMap.get(Constants.FELIX_SKIP_GENERATED_METHOD_CLASSLOADING);
 
-        m_skipGeneratedMethodSearch = Boolean.valueOf(str);
+        m_skipGeneratedMethodClassloading = Boolean.valueOf(str);
 
          //Initialize Native Library Aliases
         NativeLibraryClause.initializeNativeAliases(m_configMap);
@@ -497,8 +497,8 @@ public class Felix extends BundleImpl implements Framework
         return m_bootPkgWildcards;
     }
 
-    public boolean skipGeneratedMethodSearch() {
-        return m_skipGeneratedMethodSearch;
+    public boolean skipGeneratedMethodClassloading() {
+        return m_skipGeneratedMethodClassloading;
     }
 
     private Map createUnmodifiableMap(Map mutableMap)
