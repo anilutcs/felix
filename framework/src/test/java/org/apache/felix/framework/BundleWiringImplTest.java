@@ -368,6 +368,30 @@ public class BundleWiringImplTest
                 dummyWovenClassListener.stateList.get(1));
     }
 
+    @Test
+    public void testThrowCNFForGeneratedMethodAccessor() throws Exception
+    {
+        bundleWiring = mock(BundleWiringImpl.class);
+        BundleImpl bundleImpl = mock(BundleImpl.class);
+        Felix felix = mock(Felix.class);
+        when(bundleImpl.getFramework()).thenReturn(felix);
+        when(felix.skipGeneratedMethodSearch()).thenReturn(true);
+        when(bundleWiring.getBundle()).thenReturn(bundleImpl);
+        BundleClassLoader bundleClassLoader = createBundleClassLoader(
+                BundleClassLoader.class, bundleWiring);
+        assertNotNull(bundleClassLoader);
+
+        try {
+            bundleClassLoader.loadClass("sun.reflect.GeneratedMethodAccessor", true);
+            fail();
+        } catch (ClassNotFoundException cnf) {
+            //this is expected
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
     @SuppressWarnings("rawtypes")
     private byte[] createTestClassBytes(Class testClass, String testClassAsPath)
             throws IOException

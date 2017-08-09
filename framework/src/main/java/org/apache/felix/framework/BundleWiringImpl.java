@@ -1453,6 +1453,14 @@ public class BundleWiringImpl implements BundleWiring
     {
         Object result = null;
 
+        //terminate search for sun.reflect.GeneratedMethodAccessor* classes via delegation if enabled with felix property
+        //FELIX-5665 - High CPU usage on sun.reflect.Generated* class loads by log4j
+
+        if (getBundle().getFramework().skipGeneratedMethodSearch()
+                && name.startsWith(SUN_REFLECT_GENERATED_METHOD_ACCESSOR)) {
+            throw new ClassNotFoundException(name + " not found by " + this.getBundle());
+        }
+
         Set requestSet = (Set) m_cycleCheck.get();
         if (requestSet == null)
         {
@@ -1494,12 +1502,6 @@ public class BundleWiringImpl implements BundleWiring
                                 {
                                     throw ex;
                                 }
-                            }
-                            
-                            //terminate search for sun.reflect.GeneratedMethodAccessor* classes if the property is set
-                            if (getBundle().getFramework().skipGeneratedMethodSearch()
-                                    && name.startsWith(SUN_REFLECT_GENERATED_METHOD_ACCESSOR)) {
-                                throw new ClassNotFoundException(name + " not found by " + this.getBundle());
                             }
                         }
 
