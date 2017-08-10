@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
@@ -30,14 +31,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.framework.BundleWiringImpl.BundleClassLoader;
 import org.apache.felix.framework.cache.Content;
+import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.objectweb.asm.ClassReader;
@@ -369,20 +373,94 @@ public class BundleWiringImplTest
     }
 
     @Test
-    public void testThrowCNFForGeneratedMethodAccessor() throws Exception
+    public void testFirstGeneratedAccessorSkipClassloading() throws Exception
     {
+
+        String classToBeLoaded = "sun.reflect.GeneratedMethodAccessor21";
+
+        Felix mockFramework = mock(Felix.class);
+        when(mockFramework.getBootPackages()).thenReturn(new String[0]);
+        when(mockFramework.skipGeneratedAccessorClassloading()).thenReturn(true);
+
+        initializeSimpleBundleWiring();
+
+        when(bundleWiring.getBundle().getFramework()).thenReturn(mockFramework);
+
+        BundleClassLoader bundleClassLoader = createBundleClassLoader(
+                BundleClassLoader.class, bundleWiring);
+        assertNotNull(bundleClassLoader);
+
+        try {
+            bundleClassLoader.loadClass(classToBeLoaded, true);
+            fail();
+        } catch (ClassNotFoundException cnf) {
+            //this is expected
+
+            //make sure boot delegation was done before CNF was thrown
+            verify(mockFramework).getBootPackages();
+
+            //make sure the class is added to the skip class cache
+            Assert.assertTrue(bundleWiring.getSkipClassLoading().contains(classToBeLoaded));
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void testFirstGeneratedAccessorSkipClassloadingSkipCache() throws Exception
+    {
+
+        String classToBeLoaded = "sun.reflect.GeneratedMethodAccessor21";
+
+        Felix mockFramework = mock(Felix.class);
+        when(mockFramework.getBootPackages()).thenReturn(new String[0]);
+        when(mockFramework.skipGeneratedAccessorClassloading()).thenReturn(false);
+
+        initializeSimpleBundleWiring();
+
+        when(bundleWiring.getBundle().getFramework()).thenReturn(mockFramework);
+
+        BundleClassLoader bundleClassLoader = createBundleClassLoader(
+                BundleClassLoader.class, bundleWiring);
+        assertNotNull(bundleClassLoader);
+
+        try {
+            bundleClassLoader.loadClass(classToBeLoaded, true);
+            fail();
+        } catch (ClassNotFoundException cnf) {
+            //this is expected
+
+            //make sure boot delegation was done before CNF was thrown
+            verify(mockFramework).getBootPackages();
+
+            //make sure the class is added to the skip class cache
+            Assert.assertFalse(bundleWiring.getSkipClassLoading().contains(classToBeLoaded));
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void testSubsequentGeneratedAccessorSkipClassloading() throws Exception
+    {
+        String classToBeLoaded = "sun.reflect.GeneratedMethodAccessor21";
         bundleWiring = mock(BundleWiringImpl.class);
+        Set<String> skipClassLoadingMap = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
+        skipClassLoadingMap.add(classToBeLoaded);
+        when(bundleWiring.getSkipClassLoading()).thenReturn(skipClassLoadingMap);
         BundleImpl bundleImpl = mock(BundleImpl.class);
         Felix felix = mock(Felix.class);
         when(bundleImpl.getFramework()).thenReturn(felix);
-        when(felix.skipGeneratedMethodClassloading()).thenReturn(true);
+        when(felix.skipGeneratedAccessorClassloading()).thenReturn(true);
         when(bundleWiring.getBundle()).thenReturn(bundleImpl);
         BundleClassLoader bundleClassLoader = createBundleClassLoader(
                 BundleClassLoader.class, bundleWiring);
         assertNotNull(bundleClassLoader);
 
         try {
-            bundleClassLoader.loadClass("sun.reflect.GeneratedMethodAccessor", true);
+            bundleClassLoader.loadClass(classToBeLoaded, true);
             fail();
         } catch (ClassNotFoundException cnf) {
             //this is expected

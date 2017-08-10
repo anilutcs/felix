@@ -196,7 +196,7 @@ public class Felix extends BundleImpl implements Framework
     private final boolean[] m_bootPkgWildcards;
 
     // Terminate class loading after searching boot delegation.
-    private final boolean m_skipGeneratedMethodClassloading;
+    private final boolean m_skipGeneratedAccessorClassloading;
 
     // Shutdown gate.
     private volatile ThreadGate m_shutdownGate = null;
@@ -288,9 +288,9 @@ public class Felix extends BundleImpl implements Framework
      *       recommended not to use this property since it breaks modularity.
      *       The default value is empty.
      *   </li>
-     *   <li><tt>felix.skip.generated.method.classloading</tt> -
+     *   <li><tt>felix.skip.generated.accessor.classloading</tt> -
      *   Specifies if the class loading should be terminated before boot delegation for
-     *   for sun.reflect.GeneratedMethodAccessor* classes.
+     *   for sun.reflect.Generated* classes.
      *   The default value is false.
      *   </li>
      *   <li><tt>felix.systembundle.activators</tt> - A <tt>List</tt> of
@@ -414,9 +414,9 @@ public class Felix extends BundleImpl implements Framework
 
         String str = (m_configMap == null)
                 ? "false"
-                : (String) m_configMap.get(Constants.FELIX_SKIP_GENERATED_METHOD_CLASSLOADING);
+                : (String) m_configMap.get(Constants.FELIX_SKIP_GENERATED_ACCESSOR_CLASSLOADING);
 
-        m_skipGeneratedMethodClassloading = Boolean.valueOf(str);
+        m_skipGeneratedAccessorClassloading = Boolean.valueOf(str);
 
          //Initialize Native Library Aliases
         NativeLibraryClause.initializeNativeAliases(m_configMap);
@@ -497,8 +497,8 @@ public class Felix extends BundleImpl implements Framework
         return m_bootPkgWildcards;
     }
 
-    public boolean skipGeneratedMethodClassloading() {
-        return m_skipGeneratedMethodClassloading;
+    public boolean skipGeneratedAccessorClassloading() {
+        return m_skipGeneratedAccessorClassloading;
     }
 
     private Map createUnmodifiableMap(Map mutableMap)

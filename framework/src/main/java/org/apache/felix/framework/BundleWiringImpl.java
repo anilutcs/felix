@@ -40,6 +40,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.framework.cache.Content;
 import org.apache.felix.framework.cache.JarContent;
@@ -83,7 +84,7 @@ public class BundleWiringImpl implements BundleWiring
     public final static int EAGER_ACTIVATION = 0;
     public final static int LAZY_ACTIVATION = 1;
 
-    public final static String SUN_REFLECT_GENERATED_METHOD_ACCESSOR = "sun.reflect.GeneratedMethodAccessor";
+    protected final static String SUN_REFLECT_GENERATED_ACCESSOR_ACCESSOR = "sun.reflect.Generated";
 
     private final Logger m_logger;
     private final Map m_configMap;
@@ -112,6 +113,8 @@ public class BundleWiringImpl implements BundleWiring
     private final ClassLoader m_bootClassLoader;
     // Default class loader for boot delegation.
     private final static ClassLoader m_defBootClassLoader;
+
+    private final Set<String> m_skipClassLoading;
 
     // Statically define the default class loader for boot delegation.
     static
@@ -448,6 +451,9 @@ public class BundleWiringImpl implements BundleWiring
                 m_useLocalURLs =
                         (m_configMap.get(FelixConstants.USE_LOCALURLS_PROP) == null)
                         ? false : true;
+
+                        m_skipClassLoading = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
+
                     }
 
     private static List<List<String>> parsePkgFilters(BundleCapability cap, String filtername)
@@ -473,6 +479,10 @@ public class BundleWiringImpl implements BundleWiring
     public String toString()
     {
         return m_revision.getBundle().toString();
+    }
+
+    public Set<String> getSkipClassLoading() {
+        return m_skipClassLoading;
     }
 
     public synchronized void dispose()
@@ -1453,11 +1463,7 @@ public class BundleWiringImpl implements BundleWiring
     {
         Object result = null;
 
-        //terminate search for sun.reflect.GeneratedMethodAccessor* classes via delegation if enabled with felix property
-        //FELIX-5665 - High CPU usage on sun.reflect.Generated* class loads by log4j
-
-        if (getBundle().getFramework().skipGeneratedMethodClassloading()
-                && name.startsWith(SUN_REFLECT_GENERATED_METHOD_ACCESSOR)) {
+        if(getSkipClassLoading().contains(name)) {
             throw new ClassNotFoundException(name + " not found by " + this.getBundle());
         }
 
@@ -1503,6 +1509,16 @@ public class BundleWiringImpl implements BundleWiring
                                     throw ex;
                                 }
                             }
+                        }
+
+                        //terminate search for sun.reflect.Generated* classes if enabled with felix property
+                        //by adding the class to the skipClassloading list
+                        //FELIX-5665 - High CPU usage on sun.reflect.Generated* class loads by log4j
+
+                        if (getBundle().getFramework().skipGeneratedAccessorClassloading()
+                                && name.startsWith(SUN_REFLECT_GENERATED_ACCESSOR_ACCESSOR)) {
+                            getSkipClassLoading().add(name);
+                            throw new ClassNotFoundException(name + " not found by " + this.getBundle());
                         }
 
                         // Look in the revision's imports. Note that the search may

@@ -983,7 +983,7 @@ public interface Constants {
 	 * {@code BundleContext.getProperty} method.
 	 *
 	 */
-	String	FELIX_SKIP_GENERATED_METHOD_CLASSLOADING = "felix.skip.generated.method.classloading";
+	String	FELIX_SKIP_GENERATED_ACCESSOR_CLASSLOADING = "felix.skip.generated.accessor.classloading";
 
 	/**
 	 * Framework launching property identifying packages which the system bundle
