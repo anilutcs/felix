@@ -484,11 +484,11 @@ public class BundleWiringImpl implements BundleWiring
         return m_revision.getBundle().toString();
     }
 
-    public Map<String, BundleRevision> getAccessorLookupCache() {
+    protected Map<String, BundleRevision> getAccessorLookupCache() {
         return m_accessorLookupCache;
     }
 
-    public Set<String> getAccessorFailedLookupCache() {
+    protected Set<String> getAccessorFailedLookupCache() {
         return m_accessorFailedLookupCache;
     }
 
